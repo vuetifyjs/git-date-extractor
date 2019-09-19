@@ -118,6 +118,8 @@ test('main - integration test - git pre commit', async t => {
 	const timeDiff = Math.abs((Math.floor(checkTimeDelayMs / 1000)) - timeDelay);
 	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}. File stats: ${fileInfoString}`);
 	t.log('File contents AFTER TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
+	const shStatOut = childProc.execSync(`stat ${testFiles.alpha}`);
+	t.log(`Actual sh stat out: ${shStatOut.toString()}`);
 });
 
 // Teardown dir and files
