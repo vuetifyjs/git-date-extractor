@@ -87,7 +87,7 @@ test('main - integration test - git pre commit', async t => {
 		}, checkTimeDelayMs);
 	}));
 	t.log('pre test - ending wait at ' + (new Date()).toString());
-	tstHelpers.iDebugLog('pre test - ending wait at ' + (new Date()).toString());
+	t.log(`node stat = ${JSON.stringify(fse.statSync(testFiles.alpha))}`);
 	t.log('File contents BEFORE TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
 	t.log(`Actual sh stat out: ${childProc.execSync(`stat ${testFiles.alpha}`).toString()}`);
 	// Touch alpha so that it will have a different mtime value
@@ -109,15 +109,16 @@ test('main - integration test - git pre commit', async t => {
 	t.falsy(tstHelpers.wasLastCommitAutoAddCache(tempDirPath, cacheFileName));
 	// Check that actual numbers came back for stamps
 	const alphaStamp = result['alpha.txt'];
+	t.log(alphaStamp);
 	t.true(typeof (alphaStamp.created) === 'number');
 	t.true(typeof (alphaStamp.modified) === 'number');
 	// Check time difference in stamps. Note that both modified and created stamps should be based off file stat, since no git history has been created
 	const timeDelay = Number(alphaStamp.modified) - Number(alphaStamp.created);
 	// For travis-ci
-	const fileInfoString = JSON.stringify(fse.statSync(testFiles.alpha));
+	t.log(`node stat = ${JSON.stringify(fse.statSync(testFiles.alpha))}`);
 	// Assume a small variance is OK
 	const timeDiff = Math.abs((Math.floor(checkTimeDelayMs / 1000)) - timeDelay);
-	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}. File stats: ${fileInfoString}`);
+	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}.`);
 	t.log('File contents AFTER TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
 	t.log(`Actual sh stat out: ${childProc.execSync(`stat ${testFiles.alpha}`).toString()}`);
 });
