@@ -103,7 +103,7 @@ async function removeTestDir(tempDirPath) {
 function touchFileSync(filePath) {
 	if (parseFloat(process.versions.node) < 9) {
 		// Force!
-		childProc.execSync(`touch ${filePath}`);
+		childProc.execSync(`touch ${filePath} -m`);
 	} else {
 		const now = new Date();
 		try {

@@ -78,12 +78,16 @@ test('main - integration test - git pre commit', async t => {
 	const tempDirPath = posixNormalize(__dirname + '/' + tempDirName);
 	const {testFiles} = tstHelpers.buildTestDir(tempDirPath, tempSubDirName, true, cacheFileName);
 	const checkTimeDelayMs = 8000;
+	tstHelpers.iDebugLog('pre test - starting wait at ' + (new Date()).toString());
+	t.log('pre test - starting wait at ' + (new Date()).toString());
 	// Wait a bit so that we can make sure there is a difference in stamps
 	await (new Promise((resolve) => {
 		setTimeout(() => {
 			resolve();
 		}, checkTimeDelayMs);
 	}));
+	t.log('pre test - ending wait at ' + (new Date()).toString());
+	tstHelpers.iDebugLog('pre test - ending wait at ' + (new Date()).toString());
 	// Touch alpha so that it will have a different mtime value
 	tstHelpers.touchFileSync(testFiles.alpha);
 	// Now run full process - get stamps, save to file, etc.
