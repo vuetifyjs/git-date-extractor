@@ -89,6 +89,7 @@ test('main - integration test - git pre commit', async t => {
 	t.log('pre test - ending wait at ' + (new Date()).toString());
 	tstHelpers.iDebugLog('pre test - ending wait at ' + (new Date()).toString());
 	t.log('File contents BEFORE TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
+	t.log(`Actual sh stat out: ${childProc.execSync(`stat ${testFiles.alpha}`).toString()}`);
 	// Touch alpha so that it will have a different mtime value
 	tstHelpers.touchFileSync(testFiles.alpha);
 	// Now run full process - get stamps, save to file, etc.
@@ -118,12 +119,11 @@ test('main - integration test - git pre commit', async t => {
 	const timeDiff = Math.abs((Math.floor(checkTimeDelayMs / 1000)) - timeDelay);
 	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}. File stats: ${fileInfoString}`);
 	t.log('File contents AFTER TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
-	const shStatOut = childProc.execSync(`stat ${testFiles.alpha}`);
-	t.log(`Actual sh stat out: ${shStatOut.toString()}`);
+	t.log(`Actual sh stat out: ${childProc.execSync(`stat ${testFiles.alpha}`).toString()}`);
 });
 
 // Teardown dir and files
-test.after.always(async () => {
+test.serial.after.always(async () => {
 	const dirNames = Object.keys(tempDirNames).map(key => tempDirNames[key]);
 	for (let x = 0; x < dirNames.length; x++) {
 		const tempDirPath = posixNormalize(__dirname + '/' + dirNames[x]);
