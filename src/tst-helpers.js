@@ -114,7 +114,7 @@ function touchFileSync(filePath) {
 	}
 	// Make sure to actually change file contents to trigger git
 	fse.writeFileSync(filePath, '-', {
-		flag: 'a'
+		flag: 'TOUCHED'
 	});
 }
 

@@ -88,6 +88,7 @@ test('main - integration test - git pre commit', async t => {
 	}));
 	t.log('pre test - ending wait at ' + (new Date()).toString());
 	tstHelpers.iDebugLog('pre test - ending wait at ' + (new Date()).toString());
+	t.log('File contents BEFORE TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
 	// Touch alpha so that it will have a different mtime value
 	tstHelpers.touchFileSync(testFiles.alpha);
 	// Now run full process - get stamps, save to file, etc.
@@ -116,6 +117,7 @@ test('main - integration test - git pre commit', async t => {
 	// Assume a small variance is OK
 	const timeDiff = Math.abs((Math.floor(checkTimeDelayMs / 1000)) - timeDelay);
 	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}. File stats: ${fileInfoString}`);
+	t.log('File contents AFTER TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
 });
 
 // Teardown dir and files
