@@ -107,9 +107,11 @@ test('main - integration test - git pre commit', async t => {
 	t.true(typeof (alphaStamp.modified) === 'number');
 	// Check time difference in stamps. Note that both modified and created stamps should be based off file stat, since no git history has been created
 	const timeDelay = Number(alphaStamp.modified) - Number(alphaStamp.created);
+	// For travis-ci
+	const fileInfoString = JSON.stringify(fse.statSync(testFiles.alpha));
 	// Assume a small variance is OK
 	const timeDiff = Math.abs((Math.floor(checkTimeDelayMs / 1000)) - timeDelay);
-	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}.`);
+	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}. File stats: ${fileInfoString}`);
 });
 
 // Teardown dir and files
