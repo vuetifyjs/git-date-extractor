@@ -39,7 +39,7 @@ test('main - integration test - git post commit', async t => {
 		}, checkTimeDelayMs);
 	}));
 	// Touch alpha so it can be re-staged and committed - thus giving it a later modification stamp
-	tstHelpers.touchFileSync(testFiles.alpha);
+	tstHelpers.touchFileSync(testFiles.alpha, true);
 	// Git commit all the files
 	childProc.execSync('git add . && git commit -m "added files"', {
 		cwd: tempDirPath
@@ -78,7 +78,6 @@ test('main - integration test - git pre commit', async t => {
 	const tempDirPath = posixNormalize(__dirname + '/' + tempDirName);
 	const {testFiles} = tstHelpers.buildTestDir(tempDirPath, tempSubDirName, true, cacheFileName);
 	const checkTimeDelayMs = 8000;
-	tstHelpers.iDebugLog('pre test - starting wait at ' + (new Date()).toString());
 	t.log('pre test - starting wait at ' + (new Date()).toString());
 	// Wait a bit so that we can make sure there is a difference in stamps
 	await (new Promise((resolve) => {
@@ -91,7 +90,7 @@ test('main - integration test - git pre commit', async t => {
 	t.log('File contents BEFORE TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
 	t.log(`Actual sh stat out: ${childProc.execSync(`stat ${testFiles.alpha}`).toString()}`);
 	// Touch alpha so that it will have a different mtime value
-	tstHelpers.touchFileSync(testFiles.alpha);
+	tstHelpers.touchFileSync(testFiles.alpha, true);
 	// Now run full process - get stamps, save to file, etc.
 	/**
 	 * @type {InputOptions}
