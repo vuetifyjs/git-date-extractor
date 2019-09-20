@@ -4,7 +4,7 @@ import test from 'ava';
 const childProc = require('child_process');
 const fse = require('fs-extra');
 const main = require('../src');
-const {posixNormalize} = require('../src/helpers');
+const {posixNormalize, getFsBirth} = require('../src/helpers');
 const tstHelpers = require('../src/tst-helpers');
 
 // Set up some paths for testing
@@ -120,6 +120,7 @@ test('main - integration test - git pre commit', async t => {
 	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}.`);
 	t.log('File contents AFTER TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
 	t.log(`Actual sh stat out: ${childProc.execSync(`stat ${testFiles.alpha}`).toString()}`);
+	t.log(getFsBirth(testFiles.alpha));
 });
 
 // Teardown dir and files

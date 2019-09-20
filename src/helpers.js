@@ -270,6 +270,7 @@ function getEndOfRangeFromStat(stats) {
  * @typedef {Object<string, any>} BirthStamps
  * @property {number} birthtimeMs - Birth time in MS since Epoch
  * @property {number} birthtime - Birth time in sec since Epoch
+ * @property {string} source - Where did the info come from
  */
 
 /**
@@ -282,7 +283,8 @@ function getEndOfRangeFromStat(stats) {
 function getFsBirth(filePath, preferNative, OPT_fsStats) {
 	const birthStamps = {
 		birthtime: null,
-		birthtimeMs: null
+		birthtimeMs: null,
+		source: 'fs'
 	};
 	let fsStats;
 	// Check for passed in value
@@ -310,6 +312,8 @@ function getFsBirth(filePath, preferNative, OPT_fsStats) {
 				// Success!
 				birthStamps.birthtime = birthTimeSec;
 				birthStamps.birthtimeMs = birthTimeSec * 1000;
+				birthStamps.source = 'debugfs';
+				success = true;
 			} else {
 				// Bad - we still get back either 0 as birthTime, or bad string
 				success = false;
