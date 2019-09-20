@@ -4,6 +4,7 @@
 
 const path = require('path');
 const childProc = require('child_process');
+const os = require('os');
 const fse = require('fs-extra');
 
 /**
@@ -284,7 +285,8 @@ function getFsBirth(filePath, preferNative, OPT_fsStats) {
 	const birthStamps = {
 		birthtime: null,
 		birthtimeMs: null,
-		source: 'fs'
+		source: 'fs',
+		errorMsg: ''
 	};
 	let fsStats;
 	// Check for passed in value
@@ -293,7 +295,7 @@ function getFsBirth(filePath, preferNative, OPT_fsStats) {
 	} else {
 		fsStats = fse.statSync(filePath);
 	}
-	if (parseFloat(process.versions.node) > 8 || preferNative || process.platform === 'win32') {
+	if (parseFloat(process.versions.node) > 9 || preferNative || process.platform === 'win32') {
 		// Just use FS
 		birthStamps.birthtimeMs = Math.round(getEndOfRangeFromStat(fsStats).lowestMs);
 		birthStamps.birthtime = Math.round(birthStamps.birthtimeMs / 1000);
@@ -305,7 +307,9 @@ function getFsBirth(filePath, preferNative, OPT_fsStats) {
 			const inode = fsStats.ino;
 			const deviceStr = /Device:\s{0,1}([a-zA-Z0-9\/]+)/.exec(childProc.execSync(`stat ${filePath}`).toString())[1];
 			// Make call to debugfs
-			const debugFsInfo = childProc.execSync(`debugfs -R 'stat <${inode}> --format=%W' ${deviceStr}`).toString();
+			const debugFsInfo = childProc.execSync(`debugfs -R 'stat <${inode}> --format=%W' ${deviceStr}`, {
+				stdio: 'pipe'
+			}).toString();
 			// Parse for timestamp
 			const birthTimeSec = parseInt(debugFsInfo, 10);
 			if (!Number.isNaN(birthTimeSec) && birthTimeSec !== 0) {
@@ -316,10 +320,12 @@ function getFsBirth(filePath, preferNative, OPT_fsStats) {
 				success = true;
 			} else {
 				// Bad - we still get back either 0 as birthTime, or bad string
+				birthStamps.errorMsg = debugFsInfo;
 				success = false;
 			}
 		} catch (error) {
 			success = false;
+			birthStamps.errorMsg = error.toString();
 		}
 		if (!success) {
 			// Fallback to fs
@@ -327,6 +333,38 @@ function getFsBirth(filePath, preferNative, OPT_fsStats) {
 		}
 	}
 	return birthStamps;
+}
+
+/**
+ * @typedef {Object<string,any>} KernelInfo
+ * @property {number} base
+ * @property {number} major
+ * @property {number} minor
+ * @property {number} patch
+ */
+/**
+ * Get kernel version of OS (or v # in case of Win)
+ * @returns {KernelInfo} - Kernel #
+ */
+function getKernelInfo() {
+	const info = {
+		base: 0,
+		major: 0,
+		minor: 0,
+		patch: 0
+	};
+	const kString = os.release();
+	const chunks = kString.split('-');
+	if (/(\d+)\.(\d+)\.(\d+)/.test(chunks[0])) {
+		const vChunks = chunks[0].split('.');
+		info.base = parseInt(vChunks[0], 10);
+		info.major = parseInt(vChunks[1], 10);
+		info.minor = parseInt(vChunks[2], 10);
+	}
+	if (/\d+/.test(chunks[1])) {
+		info.patch = parseInt(chunks[1], 10);
+	}
+	return info;
 }
 
 // @todo this is probably going to need to be revised
@@ -388,5 +426,6 @@ module.exports = {
 	nullDestination,
 	getIsValidStampVal,
 	lazyAreObjsSame,
-	getFsBirth
+	getFsBirth,
+	getKernelInfo
 };

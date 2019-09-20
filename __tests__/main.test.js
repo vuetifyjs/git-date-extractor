@@ -4,7 +4,7 @@ import test from 'ava';
 const childProc = require('child_process');
 const fse = require('fs-extra');
 const main = require('../src');
-const {posixNormalize, getFsBirth} = require('../src/helpers');
+const {posixNormalize, getFsBirth, getKernelInfo} = require('../src/helpers');
 const tstHelpers = require('../src/tst-helpers');
 
 // Set up some paths for testing
@@ -111,16 +111,34 @@ test('main - integration test - git pre commit', async t => {
 	t.log(alphaStamp);
 	t.true(typeof (alphaStamp.created) === 'number');
 	t.true(typeof (alphaStamp.modified) === 'number');
-	// Check time difference in stamps. Note that both modified and created stamps should be based off file stat, since no git history has been created
-	const timeDelay = Number(alphaStamp.modified) - Number(alphaStamp.created);
+
 	// For travis-ci
-	t.log(`node stat = ${JSON.stringify(fse.statSync(testFiles.alpha))}`);
+	// t.log(`node stat = ${JSON.stringify(fse.statSync(testFiles.alpha))}`);
 	// Assume a small variance is OK
-	const timeDiff = Math.abs((Math.floor(checkTimeDelayMs / 1000)) - timeDelay);
-	t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}.`);
+
 	t.log('File contents AFTER TOUCH: ' + fse.readFileSync(testFiles.alpha).toString());
 	t.log(`Actual sh stat out: ${childProc.execSync(`stat ${testFiles.alpha}`).toString()}`);
 	t.log(getFsBirth(testFiles.alpha));
+
+	/**
+	 * For Node v8, on any kernel version of linux, fs.stat does not return valid birthtime (aka creation time)
+	 * On newer Node, they take advantage of glibc (2.28+) syscall to statx(), which is in kernel 4.11+, and returns good birthtime
+	 * So, skip test if (node v < 9 && linux) OR (node v >= 9 && linux  && kernel < 4.11)
+	 */
+	let skipNonGitBirthTest = false;
+	if (process.platform !== 'win32') {
+		const kInfo = getKernelInfo();
+		if ((parseFloat(process.versions.node) < 9) || (kInfo.base < 5 && kInfo.major < 11)) {
+			skipNonGitBirthTest = true;
+			t.pass('Non-git-based birthtime test skipped for OS without statx() available');
+		}
+	}
+	if (skipNonGitBirthTest === false) {
+		// Check time difference in stamps. Note that both modified and created stamps should be based off file stat, since no git history has been created
+		const timeDelay = Number(alphaStamp.modified) - Number(alphaStamp.created);
+		const timeDiff = Math.abs((Math.floor(checkTimeDelayMs / 1000)) - timeDelay);
+		t.true(timeDiff <= maxTimeVarianceSec, `Diff between created and modified should have been ${Math.floor(checkTimeDelayMs / 1000)}, but was ${timeDelay}. This variance of ${timeDiff} is beyond the accepted variance of ${maxTimeVarianceSec}.`);
+	}
 });
 
 // Teardown dir and files
