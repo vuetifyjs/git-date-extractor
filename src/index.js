@@ -34,10 +34,12 @@ async function main(options, opt_cb) {
 			callerDir
 		});
 	}
-	/* istanbul ignore if */
-	if (!getIsInGitRepo(optionsObj.projectRootPath)) {
-		throw (new Error('Fatal Error: You are not in a git initialized project space! Please run git init.'));
-	}
+
+	// console.log(optionsObj.projectRootPath)
+	// /* istanbul ignore if */
+	// if (!getIsInGitRepo(optionsObj.projectRootPath)) {
+	// 	throw (new Error('Fatal Error: You are not in a git initialized project space! Please run git init.'));
+	// }
 	/**
 	* @type StampCache
 	*/
